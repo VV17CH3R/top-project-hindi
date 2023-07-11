@@ -8,10 +8,11 @@ import Auth from "../Auth";
 import Modal from "../Modal";
 
 const Layout = ({ children }) => {
+
   const router = useRouter();
 
   const {
-    state: { isModalOpen, formType, session },
+    state: { isModalOpen, formType, session,},
     dispatch,
   } = useContext(AuthContext);
 
@@ -20,7 +21,6 @@ const Layout = ({ children }) => {
   const handleLogout = async () => {
     await db.auth.signOut();
     dispatch({ type: "LOGOUT" });
-    router.push("/");
   };
 
   return (
@@ -70,7 +70,7 @@ const Layout = ({ children }) => {
         <div>
           {session && (
             <>
-              <button
+              { db.auth.session().user.email === process.env.NEXT_PUBLIC_DB_ADMIN_UUID  && (<button
                 className="px-4 mx-3 py-2 text-lg bg-black
           hover:bg-slate-900 border-black text-white rounded"
                 onClick={() => {
@@ -78,17 +78,18 @@ const Layout = ({ children }) => {
                 }}
               >
                 Админ
-              </button>
+              </button>)}
               <Link
                 href="/cart"
-                className="px-4 py-2 text-lg mx-6
-        hover:bg-slate-300 border-black text-black rounded"
+                className="  mx-4 p-3 
+                hover:bg-slate-300 border-black text-black rounded"
               >
-                Корзина  { totalCartItems }
+                Корзина: {totalCartItems}
               </Link>
+
               <button
                 className="px-4 py-2 text-lg bg-black
-        hover:bg-slate-900 border-black text-white rounded"
+              hover:bg-slate-900 border-black text-white rounded"
                 onClick={handleLogout}
               >
                 Выйти

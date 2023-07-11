@@ -1,10 +1,19 @@
 import { CartContext } from "@/src/state/CartContext";
 import Image from "next/image";
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { AiOutlinePlus, AiOutlineMinus } from "react-icons/ai";
+import { FaSpinner } from 'react-icons/fa';
 
 const Product = (el) => {
   const { cartState, removeFromCart, addToCart } = useContext(CartContext);
+
+  const [loading, setLoading] = useState(false);
+
+  const handleCartOperation = async (operation) => {
+    setLoading(true);
+    await operation;
+    setLoading(false);
+  };
 
   return (
     <div
@@ -26,39 +35,42 @@ const Product = (el) => {
         <button
           className="m-1 px-4 py-2 text-base bg-gray-600
           hover:bg-gray-400  hover:text-black hover:border border text-white rounded 
-		  transition ease-in-out delay-150  hover:-translate-y-1 hover:scale-110  duration-300 mr-auto"
+		      transition ease-in-out delay-150  hover:-translate-y-1 hover:scale-110  duration-300 mr-auto"
         >
           Купить
         </button>
         {!cartState[el.id] ? (
           <button
-            onClick={() => addToCart(el)}
-            className="m-1 px-4 py-2 text-sm bg-gray-600
+            onClick={() => handleCartOperation(addToCart(el))}
+            className="m-1 px-4 py-2 text-sm bg-gray-600 w-52 flex items-center justify-center
           hover:bg-gray-400  hover:text-black hover:border border text-white rounded 
-		  transition ease-in-out delay-150  hover:-translate-y-1 hover:scale-110  duration-300 "
+		        transition ease-in-out delay-150  hover:-translate-y-1 hover:scale-110  duration-300 "
+            disabled={loading}
           >
-            Добавить товар в корзину
+            {!loading ? "Добавить товар в корзину" : <FaSpinner className="text-lg animate-spin"/> }
           </button>
         ) : (
           <div className="flex items-center justify-center">
             <button
-              onClick={() => addToCart(el)}
+              onClick={() => handleCartOperation(addToCart(el))}
               className="m-1 px-4 py-2 text-sm bg-gray-600
-          hover:bg-gray-400  hover:text-black hover:border border text-white rounded 
-		  transition ease-in-out delay-150  hover:-translate-y-1 hover:scale-110  duration-300 "
+            hover:bg-gray-400  hover:text-black hover:border border text-white rounded 
+		          transition ease-in-out delay-150  hover:-translate-y-1 hover:scale-110  duration-300 "
+              disabled={loading}
             >
               <AiOutlinePlus />
             </button>
 
             <span className="mx-5">
-              {cartState[el.id]}
+              {!loading ? cartState[el.id] : <FaSpinner className="text-lg animate-spin"/>}
             </span>
 
             <button
-              onClick={() => removeFromCart(el)}
+              onClick={() => handleCartOperation(removeFromCart(el))}
               className="m-1 px-4 py-2 text-sm bg-gray-600
-        hover:bg-gray-400  hover:text-black hover:border border text-white rounded 
-    transition ease-in-out delay-150  hover:-translate-y-1 hover:scale-110  duration-300 "
+            hover:bg-gray-400  hover:text-black hover:border border text-white rounded 
+              transition ease-in-out delay-150  hover:-translate-y-1 hover:scale-110  duration-300 "
+              disabled={loading}
             >
               <AiOutlineMinus />
             </button>

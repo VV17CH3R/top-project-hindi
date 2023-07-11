@@ -1,6 +1,7 @@
 import useForm from "@/src/hooks/useForm";
 import { db } from "@/src/utils/dbClient";
-import React, { useRef, useState } from "react";
+import { useRouter } from "next/router";
+import React, { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 
 const ProductForm = () => {
@@ -21,23 +22,23 @@ const ProductForm = () => {
     const { error } = await db.storage
       .from("products")
       .upload(`images/${imgName}`, imageFile, {
-        cacheControl: '3600',
+        cacheControl: "3600",
         upsert: false,
       });
     if (error) return toast.error(error.message);
 
-    const { publicURL } = db.storage.from("products").getPublicUrl(`images/${imgName}`);
-      
+    const { publicURL } = db.storage
+      .from("products")
+      .getPublicUrl(`images/${imgName}`);
+
     return new URL(publicURL).href;
   };
-
-
 
   const handleImageChange = (e) => {
     const image = e.target.files[0];
     if (image.size > 2000000) {
-      toast.error('Картинка должна быть не более 2MB');
-      return
+      toast.error("Картинка должна быть не более 2MB");
+      return;
     }
     setImageFile(image);
   };
@@ -45,32 +46,46 @@ const ProductForm = () => {
   const handleSubmitProduct = async (e) => {
     e.preventDefault();
     setLoading(true);
+    if (
+      db.auth.session().user.email === process.env.NEXT_PUBLIC_DB_ADMIN_UUID
+    ) {
+      let publicUrl = "";
 
-    let publicUrl = "";
+      if (imageFile) {
+        publicUrl = await uploadImage();
+      }
 
-    if (imageFile) {
-      publicUrl = await uploadImage();
+      const { data, error } = await db.from("product").insert([
+        {
+          name: form.name,
+          price: form.price,
+          description: form.description,
+          image: publicUrl,
+          stock: form.stock,
+        },
+      ]);
+
+      if (error) {
+        return toast.error(error.message);
+      }
+
+      toast.success("Продукт успешно добавлен");
+      imageFileRef.current.value = "";
+      resetForm();
+      setLoading(false);
+    } else {
+      setLoading(false);
+      return toast.error("Только администратор может добавлять продукты");
     }
-
-    const { data, error } = await db.from("product").insert([
-      {
-        name: form.name,
-        price: form.price,
-        description: form.description,
-        image: publicUrl,
-        stock: form.stock,
-      },
-    ]);
-
-    if(error) {
-      return toast.error(error.message);
-    }
-
-    toast.success("Продукт успешно добавлен");
-    imageFileRef.current.value = "";
-    resetForm();
-    setLoading(false);
   };
+
+  const router = useRouter();
+
+  useEffect(() => {
+    if( db.auth.session().user.email !== process.env.NEXT_PUBLIC_DB_ADMIN_UUID) {
+      router.push("/");
+    }
+  },[router])
 
   return (
     <form onSubmit={handleSubmitProduct} className="mx-auto w-96 space-y-4">
@@ -151,14 +166,14 @@ const ProductForm = () => {
       <button
         type="submit"
         className={`m-1 px-4 py-2 w-full text-sm bg-gray-600
-                    hover:bg-gray-400  hover:text-black hover:border border text-white rounded 
-                    transition ease-in-out delay-150  hover:-translate-y-1 hover:scale-110  duration-300
-                    ${
-                      loading
-                        ? "cursor-not-allowed animate-pulse"
-                        : "cursor-pointer"
-                    }
-                  `}
+                hover:bg-gray-400  hover:text-black hover:border border text-white rounded 
+                transition ease-in-out delay-150  hover:-translate-y-1 hover:scale-110  duration-300
+                ${
+                  loading
+                    ? "cursor-not-allowed animate-pulse"
+                    : "cursor-pointer"
+                }
+              `}
       >
         Добавить продукт
       </button>

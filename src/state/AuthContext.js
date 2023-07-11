@@ -8,7 +8,12 @@ const initialAuthState = {
   session: null,
 };
 
-export const AuthContext = createContext(initialAuthState);
+
+
+export const AuthContext = createContext({
+  state: initialAuthState,
+  dispatch: () => {},
+});
 
 const authReducer = (state, action) => {
   switch (action.type) {
@@ -28,24 +33,26 @@ const authReducer = (state, action) => {
         ...state,
         session: action.session,
       };
-    case "LOGOUT" : {
-        return {
-            ...state,
-            session: null,
-        }
-    }
+    case "LOGOUT": {
+      return {
+        ...state,
+        session: null,
+      };
+     }
   }
 };
+
 
 const AuthContextProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialAuthState);
 
   useEffect(() => {
-    dispatch({ type: 'LOGIN', session: db.auth.session() });
+    dispatch({ type: "LOGIN", session: db.auth.session() });
     db.auth.onAuthStateChange((event, session) => {
-      dispatch({ type: 'LOGIN', session });
+      dispatch({ type: "LOGIN", session });
     });
   }, []);
+
 
   return (
     <AuthContext.Provider

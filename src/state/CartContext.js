@@ -1,8 +1,7 @@
 import useCart from "../hooks/useCart";
-import useLocalStorage from "../hooks/useLocalStorage";
 import { ProductsContext } from "./ProductsContext";
 
-const { createContext, useEffect, useMemo, useContext } = require("react");
+const { createContext, useMemo, useContext, useEffect } = require("react");
 
 export const CartContext = createContext({
   cartState: {},
@@ -17,17 +16,16 @@ export const CartContext = createContext({
 const CartContextProvider = ({ children }) => {
   const { productsList } = useContext(ProductsContext);
 
-  const { getItem } = useLocalStorage("cart");
-  const { setCartState, cartState, removeFromCart, addToCart, clearCart } =
+
+  const { setCartState, fetchCurrentCart, cartState, removeFromCart, addToCart, clearCart } =
     useCart();
 
-  // useEffect(() => {
-  //   const localCart = getItem();
-  //   if (localCart) {
-  //     setCartState(localCart);
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, []);
+  useEffect(() => {
+    (async () => {
+      await fetchCurrentCart();
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cartState]);
 
   const totalCartItems = useMemo(() => {
     return Object.values(cartState)

@@ -14,53 +14,59 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
 
   const { form, handleChange, resetForm } = useForm({
-    name: "",
+    full_name: "",
     password: "",
     email: "",
+    phone: null,
   });
-
 
   const handlerSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    if(formType === "sign"){
-      const {error:signUpError} = await db.auth.signUp({
-        email: form.email,
-        password: form.password,
-      }, {
-        full_name: form.name,
-      });
+    if (formType === "sign") {
+      const { error: signUpError } = await db.auth.signUp(
+        {
+          email: form.email,
+          password: form.password,
+        },
+        {
+          full_name: form.name,
+        }
+      );
 
-      if(signUpError) {
+      if (signUpError) {
         return showErrorToast(signUpError.message, setLoading);
-      }; 
+      }
 
       await db.from("user").insert([
         {
-          name: form.name,
-        }
+          full_name: form.full_name,
+          email: form.email.toLowerCase(),
+          phone: Number(form.phone),
+        },
       ]);
-      
     } else {
-      const {error} = await db.auth.signIn({
+      const { error } = await db.auth.signIn({
         email: form.email,
         password: form.password,
       });
 
-      if(error) {
-        return showErrorToast(error.message, setLoading); 
+      if (error) {
+        return showErrorToast(error.message, setLoading);
       }
-    };
+    }
 
     toast.success(`
       ${
-        formType === "sign" ? "Вы успешно зарегестрировались." : "Вы успешно вошли."
+        formType === "sign"
+          ? "Вы успешно зарегестрировались."
+          : "Вы успешно вошли."
       }
     `);
     resetForm();
     setLoading(false);
-    dispatch({type: "CLOSE_AUTH_MODAL"})
+    dispatch({ type: "CLOSE_AUTH_MODAL" });
   };
 
   return (
@@ -71,19 +77,36 @@ const Auth = () => {
       >
         {formType === "sign" && (
           <>
-            <label htmlFor="name">Имя</label>
+            <label htmlFor="full_name">Имя</label>
             <input
               className="outline-black border rounded p-2 border-gray-500"
-              htmlFor="name"
-              name="name"
-              id="name"
+              htmlFor="full_name"
+              name="full_name"
+              id="full_name"
               placeholder=" Ваше имя..."
-              value={form.name}
+              value={form.full_name}
               onChange={handleChange}
               required={formType === "sign"}
               minLength={2}
               disabled={loading}
             />
+            <label htmlFor="phone">Телефон</label>
+            <div> 
+              <input
+                className="outline-black border rounded p-2 border-gray-500"
+                htmlFor="phone"
+                name="phone"
+                id="phone"
+                placeholder="89876543210 "
+                type="tel"
+                value={form.phone}
+                onChange={handleChange}
+                required={formType === "sign"}
+                minLength={10}
+                maxLength={14}
+                disabled={loading}
+              />
+            </div>
           </>
         )}
         <label htmlFor="email">Электонная почта</label>
@@ -117,13 +140,19 @@ const Auth = () => {
           className={`m-1 px-4 py-2 text-sm bg-gray-600
                     hover:bg-gray-400  hover:text-black hover:border border text-white rounded 
                     transition ease-in-out delay-150  hover:-translate-y-1 hover:scale-110  duration-300
-                    ${loading ? "cursor-not-allowed animate-pulse" : "cursor-pointer"}
+                    ${
+                      loading
+                        ? "cursor-not-allowed animate-pulse"
+                        : "cursor-pointer"
+                    }
                   `}
           type="sybmit"
         >
-          {
-            loading ? "Загрузка... " : formType === "sign" ? "Регистрация" : "Войти"
-          }
+          {loading
+            ? "Загрузка... "
+            : formType === "sign"
+            ? "Регистрация"
+            : "Войти"}
         </button>
       </form>
     </div>
